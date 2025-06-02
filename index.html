@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Portal Gateway</title>
-    
-    
+    <title>Portal Gateway</title>    
     
     <style>
     
@@ -25,8 +23,6 @@
 	--brand-accent: #fa4b9e;
 	--brand-gradient: linear-gradient(135deg, #df1783 0%, #fa4b9e 100%);
 }
-
-
 
 
 
@@ -209,37 +205,6 @@ body {
 
 
 
-
-
-/* ===== ADD THIS TO YOUR CSS ===== */
-#portalCard.fadeOut {
-    animation: fadeOut 0.5s forwards;
-}
-
-@keyframes fadeOut {
-    from {
-        opacity: 1;
-        transform: scale(1);
-    }
-    to {
-        opacity: 0;
-        transform: scale(1.5);
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #portalButton::before {
 	content: "";
 	position: absolute;
@@ -289,13 +254,42 @@ body {
 
 
 
-@keyframes fadeToWhite {
-    from { background: transparent; opacity: 1; }
-    to { background: transparent; opacity: 1; }
+/* Add the LOGO to your CSS Section */
+.logo-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    width: 600px;
+    height: 600px;
+    background-image: url('https://bucket.mlcdn.com/a/3336/3336910/images/538772f660e1f03be52afd653ad5a4e6a2059d96.png'); /* Replace with your logo path */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0;
+    z-index: 1001; /* Above the white overlay */
+    pointer-events: none;
+    transition: transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                opacity 1.5s ease-out;
+}
+
+.logo-overlay.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.logo-overlay.fade-out {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.2);
 }
 
 
 
+
+@keyframes fadeToWhite {
+    from { background: transparent; opacity: 1; }
+    to { background: transparent; opacity: 1; }
+}
 
 
 #portalCard.zoomIn {
@@ -339,6 +333,26 @@ body {
 	z-index: -1;
 	opacity: 0.5;
 }
+
+
+
+/* ===== ADD THIS TO YOUR CSS ===== */
+#portalCard.fadeOut {
+    animation: fadeOut 0.5s forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(1.5);
+    }
+}
+
+
     
     
     
@@ -370,13 +384,15 @@ body {
     
     
     <script>
-
-
-	    
-      // Single Sound Effect
+        
+ // Single Sound Effect
 const cinematicWhip = new Audio('https://cdn.shopify.com/s/files/1/0242/0175/6777/files/mixkit-futuristic-cinematic-noise-whip-1518.wav?v=1748880406');
 cinematicWhip.preload = 'auto';
 cinematicWhip.load();
+
+// Animation control variables
+let animationId = null;
+let renderer, scene, camera, tube, stars;
 
 // Audio helper function
 function fadeAudio(audioElement, targetVolume, duration) {
@@ -414,8 +430,8 @@ button.addEventListener("click", (e) => {
 
 // Main portal function
 function startPortal() {
-    // Play cinematic whip sound immediately on click (start at 70% volume)
-    cinematicWhip.currentTime = 0; // Rewind to start
+    // Play cinematic whip sound immediately on click
+    cinematicWhip.currentTime = 0;
     cinematicWhip.volume = 1.0;
     cinematicWhip.play();
     
@@ -425,56 +441,95 @@ function startPortal() {
         card.remove();
     }, 500);
     
-    // Visual setup
-    document.body.style.backgroundColor = "#000000";
+    // Visual setup - keep original background visible
     canvasTunnel.style.display = "block";
     
-    // Initialize Three.js tunnel
+    // Initialize Three.js tunnel (with transparent background)
     initTunnel();
     
-    // Start zoom animation
-    card.classList.add("zoomIn");
+    // Create white overlay and logo elements
+    const whiteOverlay = document.createElement("div");
+    whiteOverlay.className = "white-overlay";
+    document.body.appendChild(whiteOverlay);
     
-    // Start fading out sound at 3.5 seconds (so it fades during white transition)
+    const logoOverlay = document.createElement("div");
+    logoOverlay.className = "logo-overlay";
+    document.body.appendChild(logoOverlay);
+    
+    // Animation timeline:
+    // 0s - Click happens, sound starts, card begins fading
+    // 0.5s - Card completely removed
+    // 1.0s - White overlay begins appearing (very subtle at first)
+    // 1.5s - Logo appears with zoom-in effect
+    // 2.5s - White overlay reaches full opacity
+    // 3.0s - Hide tunnel completely
+    // 3.5s - Sound begins fading out
+    // 4.0s - Logo begins fading out
+    // 4.5s - Redirect happens
+    
+    // Start white overlay fade in at 1.0s
     setTimeout(() => {
-        const whiteOverlay = document.createElement("div");
-        whiteOverlay.className = "white-overlay";
-        document.body.appendChild(whiteOverlay);
+        whiteOverlay.style.opacity = "0.1";
         
-        // Smooth fade out over 1.5 seconds
-        fadeAudio(cinematicWhip, 0, 1500);
-        
-        // Show white overlay
-        setTimeout(() => {
-            whiteOverlay.style.opacity = "1";
+        // Gradually increase white overlay
+        const whiteFadeInterval = setInterval(() => {
+            const currentOpacity = parseFloat(whiteOverlay.style.opacity || "0");
+            if (currentOpacity < 1) {
+                whiteOverlay.style.opacity = (currentOpacity + 0.05).toString();
+            } else {
+                clearInterval(whiteFadeInterval);
+            }
         }, 50);
         
-        // Redirect after full 5 seconds
+        // Show logo with zoom-in effect at 1.5s
+        setTimeout(() => {
+            logoOverlay.classList.add("visible");
+        }, 500);
+        
+        // Completely hide tunnel at 3.0s (while keeping background)
+        setTimeout(() => {
+            cleanupTunnel();
+            // Ensure white overlay covers everything
+            whiteOverlay.style.backgroundColor = "white";
+        }, 2000);
+        
+        // Start fading out sound at 3.5s
+        setTimeout(() => {
+            fadeAudio(cinematicWhip, 0, 500);
+        }, 2500);
+        
+        // Start fading out logo at 4.0s
+        setTimeout(() => {
+            logoOverlay.classList.add("fade-out");
+        }, 3000);
+        
+        // Redirect at 4.5s
         setTimeout(() => {
             window.location.href = DESTINATION_URL;
-        }, 5000);
-    }, 3500);
+        }, 3500);
+    }, 1000);
 }
 
-// Three.js Tunnel Animation
+// Three.js Tunnel Animation (with transparent background)
 function initTunnel() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({
+    // Renderer with transparent background
+    renderer = new THREE.WebGLRenderer({
         canvas: canvasTunnel,
         antialias: true,
         alpha: true
     });
     renderer.setSize(w, h);
+    renderer.setClearColor(0x000000, 0); // Transparent background
     
     // Scene
-    const scene = new THREE.Scene();
+    scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x000000, 0.005);
     
     // Camera
-    const camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000);
     
     // Create circular path
     const path = createCircularPath();
@@ -498,7 +553,7 @@ function initTunnel() {
     });
     
     // Tube mesh
-    const tube = new THREE.Mesh(tubeGeometry, material);
+    tube = new THREE.Mesh(tubeGeometry, material);
     scene.add(tube);
     
     // Stars
@@ -517,12 +572,12 @@ function initTunnel() {
     }
     
     starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3));
-    const stars = new THREE.Points(starsGeometry, starsMaterial);
+    stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
     
     // Animation variables
     let pct = 0;
-    const duration = 5; // 5 seconds total
+    const duration = 2.5; // Shorter tunnel duration to match new timeline
     const startTime = Date.now();
     
     // Animation loop
@@ -543,7 +598,7 @@ function initTunnel() {
         
         // Continue animation until complete
         if (pct < 1) {
-            requestAnimationFrame(animate);
+            animationId = requestAnimationFrame(animate);
         }
     }
     
@@ -558,6 +613,24 @@ function initTunnel() {
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
     });
+}
+
+// Clean up Three.js resources
+function cleanupTunnel() {
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+    }
+    if (renderer) {
+        renderer.dispose();
+    }
+    if (scene) {
+        while(scene.children.length > 0){ 
+            scene.remove(scene.children[0]); 
+        }
+    }
+    if (canvasTunnel) {
+        canvasTunnel.style.display = "none";
+    }
 }
 
 // Create circular path for tunnel
@@ -587,8 +660,6 @@ function createCircularPath() {
     
     return curve;
 }
-
-	    
     </script>
 </body>
 </html>
