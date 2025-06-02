@@ -370,306 +370,225 @@ body {
     
     
     <script>
-        // Sound Effects
-        const sounds = {
-            portalHum: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-sci-fi-portal-loop-2385.mp3'),
-            portalWhoosh: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-fast-sci-fi-transition-2159.mp3'),
-            portalEnergy: new Audio('https://assets.mixkit.co/sfx/preview/mixkit-sci-fi-positive-interface-903.mp3')
-        };
 
-        // Preload sounds
-        Object.values(sounds).forEach(sound => {
-            sound.preload = 'auto';
-            sound.load();
-        });
 
-        // Audio helper function
-        function fadeAudio(audioElement, targetVolume, duration) {
-            const initialVolume = audioElement.volume;
-            const delta = targetVolume - initialVolume;
-            const startTime = Date.now();
-            
-            function updateVolume() {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                audioElement.volume = initialVolume + delta * progress;
-                
-                if (progress < 1) {
-                    requestAnimationFrame(updateVolume);
-                }
-            }
-            
-            updateVolume();
-        }
+	    
+      // Single Sound Effect
+const cinematicWhip = new Audio('https://cdn.shopify.com/s/files/1/0242/0175/6777/files/mixkit-futuristic-cinematic-noise-whip-1518.wav?v=1748880406');
+cinematicWhip.preload = 'auto';
+cinematicWhip.load();
 
-        // Portal elements
-        const card = document.getElementById("portalCard");
-        const button = document.getElementById("portalButton");
-        const canvasTunnel = document.getElementById("tunnelCanvas");
-
-        // Destination URL
-        const DESTINATION_URL = "https://bebell-digital-solutions.github.io/ai-automation/";
-
-        // Event listeners
-        card.addEventListener("click", startPortal);
-        button.addEventListener("click", (e) => {
-            e.stopPropagation();
-            startPortal();
-        });
-
-        
-        
-        
-        
-        // Main portal function
-        function startPortal() {
-        
-        // Add fadeOut class to trigger disappearance
-    card.classList.add("fadeOut");
+// Audio helper function
+function fadeAudio(audioElement, targetVolume, duration) {
+    const initialVolume = audioElement.volume;
+    const delta = targetVolume - initialVolume;
+    const startTime = Date.now();
     
-    // Remove card after animation completes (500ms)
+    function updateVolume() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        audioElement.volume = initialVolume + delta * progress;
+        
+        if (progress < 1) {
+            requestAnimationFrame(updateVolume);
+        }
+    }
+    
+    updateVolume();
+}
+
+// Portal elements
+const card = document.getElementById("portalCard");
+const button = document.getElementById("portalButton");
+const canvasTunnel = document.getElementById("tunnelCanvas");
+
+// Destination URL
+const DESTINATION_URL = "https://bebell-digital-solutions.github.io/ai-automation/";
+
+// Event listeners
+card.addEventListener("click", startPortal);
+button.addEventListener("click", (e) => {
+    e.stopPropagation();
+    startPortal();
+});
+
+// Main portal function
+function startPortal() {
+    // Play cinematic whip sound immediately on click (start at 70% volume)
+    cinematicWhip.currentTime = 0; // Rewind to start
+    cinematicWhip.volume = 1.0;
+    cinematicWhip.play();
+    
+    // Card disappearance animation
+    card.classList.add("fadeOut");
     setTimeout(() => {
         card.remove();
     }, 500);
+    
+    // Visual setup
+    document.body.style.backgroundColor = "#000000";
+    canvasTunnel.style.display = "block";
+    
+    // Initialize Three.js tunnel
+    initTunnel();
+    
+    // Start zoom animation
+    card.classList.add("zoomIn");
+    
+    // Start fading out sound at 3.5 seconds (so it fades during white transition)
+    setTimeout(() => {
+        const whiteOverlay = document.createElement("div");
+        whiteOverlay.className = "white-overlay";
+        document.body.appendChild(whiteOverlay);
         
+        // Smooth fade out over 1.5 seconds
+        fadeAudio(cinematicWhip, 0, 1500);
         
-            // Start sound effects
-            sounds.portalHum.volume = 0;
-            sounds.portalHum.loop = true;
-            sounds.portalHum.play();
-            fadeAudio(sounds.portalHum, 0.7, 500);
-            
-            // Visual setup
-            document.body.style.backgroundColor = "#000000";
-            canvasTunnel.style.display = "block";
-            
-            // Initialize Three.js tunnel
-            initTunnel();
-            
-            // Start animation
-            card.classList.add("zoomIn");
-            
-            // Play whoosh sound after slight delay
-            setTimeout(() => {
-                sounds.portalWhoosh.volume = 0.7;
-                sounds.portalWhoosh.play();
-            }, 300);
-            
-            
-            
-            
-            // After 3.5 seconds (of 5 second total), start white transition
-            setTimeout(() => {
-                const whiteOverlay = document.createElement("div");
-                whiteOverlay.style.position = "fixed";
-                whiteOverlay.style.top = "0";
-                whiteOverlay.style.left = "0";
-                whiteOverlay.style.width = "100%";
-                whiteOverlay.style.height = "100%";
-                whiteOverlay.style.backgroundColor = "white";
-                whiteOverlay.style.opacity = "0";
-                whiteOverlay.style.zIndex = "1000";
-                whiteOverlay.style.transition = "opacity 1.5s ease-out";
-                document.body.appendChild(whiteOverlay);
-                
-                // Play energy sound
-                sounds.portalEnergy.volume = 0.8;
-                sounds.portalEnergy.play();
-                
-                // Fade out other sounds
-                fadeAudio(sounds.portalHum, 0, 1000);
-                fadeAudio(sounds.portalWhoosh, 0, 1000);
-                
-                // Fade to white
-                setTimeout(() => {
-                    whiteOverlay.style.opacity = "1";
-                }, 50);
-                
-                // Redirect after full 5 seconds
-                setTimeout(() => {
-                    window.location.href = DESTINATION_URL;
-                }, 5000);
-            }, 3500);
-        }
+        // Show white overlay
+        setTimeout(() => {
+            whiteOverlay.style.opacity = "1";
+        }, 50);
         
-        
-        
-        
+        // Redirect after full 5 seconds
+        setTimeout(() => {
+            window.location.href = DESTINATION_URL;
+        }, 5000);
+    }, 3500);
+}
 
-        // Three.js Tunnel Animation
-        function initTunnel() {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            
-            // Renderer
-            const renderer = new THREE.WebGLRenderer({
-                canvas: canvasTunnel,
-                antialias: true,
-                alpha: true
-            });
-            renderer.setSize(w, h);
-            
-            // Scene
-            const scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x000000, 0.005);
-            
+// Three.js Tunnel Animation
+function initTunnel() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({
+        canvas: canvasTunnel,
+        antialias: true,
+        alpha: true
+    });
+    renderer.setSize(w, h);
     
+    // Scene
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x000000, 0.005);
     
+    // Camera
+    const camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000);
     
+    // Create circular path
+    const path = createCircularPath();
     
-            
-            // Camera
-            const camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000);
-            
-            
-            
-       // Create circular path
-            const path = createCircularPath();
-            
-            
-            
-            
-            
-            // Tube geometry
-            const tubeGeometry = new THREE.TubeGeometry(
-                path,
-                200,
-                3,
-                12,
-                false
-            );
-            
-            
-            
-            // Tube material
-            const material = new THREE.MeshBasicMaterial({
-                side: THREE.BackSide,
-                wireframe: true,
-                color: 0xdf1783,
-                transparent: true,
-                opacity: 0.8
-            });
-            
-            
-            
-            
-            
-            // Tube mesh
-            const tube = new THREE.Mesh(tubeGeometry, material);
-            scene.add(tube);     
-   
-   
-            
-            
-            
-            
-            
-            
-            
-            
-            // Stars
-            const starsGeometry = new THREE.BufferGeometry();
-            const starsMaterial = new THREE.PointsMaterial({
-                color: 0xffffff,
-                size: 1,
-                transparent: true
-            });
-            
-            const starsPositions = new Float32Array(2000 * 3);
-            for (let i = 0; i < 2000; i++) {
-                starsPositions[i * 3] = (Math.random() - 0.5) * 2000;
-                starsPositions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
-                starsPositions[i * 3 + 2] = (Math.random() - 0.5) * 2000;
-            }
-            
-            starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3));
-            const stars = new THREE.Points(starsGeometry, starsMaterial);
-            scene.add(stars);
-            
-            
-            
-            
-            
-            // Animation variables
-            let pct = 0;
-            const duration = 5; // 5 seconds total
-            const startTime = Date.now();
-            
-            
-            
-            
-            // Animation loop
-            function animate() {
-                const elapsed = (Date.now() - startTime) / 1000;
-                pct = Math.min(elapsed / duration, 1);
-                
-                // Move camera along path
-                const lookAheadPct = Math.min(pct + 0.01, 1);
-                const pt1 = path.getPointAt(pct);
-                const pt2 = path.getPointAt(lookAheadPct);
-                
-                camera.position.set(pt1.x, pt1.y, pt1.z);
-                camera.lookAt(pt2);
-                
-                // Render
-                renderer.render(scene, camera);
-                
-                // Continue animation until complete
-                if (pct < 1) {
-                    requestAnimationFrame(animate);
-                }
-            }
-            
-              
-            
-            
-            // Start animation
-            animate();
-            
-            
-            
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                const w = window.innerWidth;
-                const h = window.innerHeight;
-                camera.aspect = w / h;
-                camera.updateProjectionMatrix();
-                renderer.setSize(w, h);
-            });
+    // Tube geometry
+    const tubeGeometry = new THREE.TubeGeometry(
+        path,
+        200,
+        3,
+        12,
+        false
+    );
+    
+    // Tube material
+    const material = new THREE.MeshBasicMaterial({
+        side: THREE.BackSide,
+        wireframe: true,
+        color: 0xdf1783,
+        transparent: true,
+        opacity: 0.8
+    });
+    
+    // Tube mesh
+    const tube = new THREE.Mesh(tubeGeometry, material);
+    scene.add(tube);
+    
+    // Stars
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsMaterial = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 1,
+        transparent: true
+    });
+    
+    const starsPositions = new Float32Array(2000 * 3);
+    for (let i = 0; i < 2000; i++) {
+        starsPositions[i * 3] = (Math.random() - 0.5) * 2000;
+        starsPositions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
+        starsPositions[i * 3 + 2] = (Math.random() - 0.5) * 2000;
+    }
+    
+    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3));
+    const stars = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(stars);
+    
+    // Animation variables
+    let pct = 0;
+    const duration = 5; // 5 seconds total
+    const startTime = Date.now();
+    
+    // Animation loop
+    function animate() {
+        const elapsed = (Date.now() - startTime) / 1000;
+        pct = Math.min(elapsed / duration, 1);
+        
+        // Move camera along path
+        const lookAheadPct = Math.min(pct + 0.01, 1);
+        const pt1 = path.getPointAt(pct);
+        const pt2 = path.getPointAt(lookAheadPct);
+        
+        camera.position.set(pt1.x, pt1.y, pt1.z);
+        camera.lookAt(pt2);
+        
+        // Render
+        renderer.render(scene, camera);
+        
+        // Continue animation until complete
+        if (pct < 1) {
+            requestAnimationFrame(animate);
         }
-        
-        
-        
-        
+    }
+    
+    // Start animation
+    animate();
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+    });
+}
 
-        // Create circular path for tunnel
-        function createCircularPath() {
-            const points = [];
-            const curve = new THREE.CatmullRomCurve3([
-                new THREE.Vector3(0, 0, 0),
-                new THREE.Vector3(20, 10, -50),
-                new THREE.Vector3(40, -10, -100),
-                new THREE.Vector3(60, 15, -150),
-                new THREE.Vector3(50, -5, -200),
-                new THREE.Vector3(0, 0, -250),
-                new THREE.Vector3(-100, 0, -200),
-                new THREE.Vector3(-150, 0, -100),
-                new THREE.Vector3(-100, 0, 0),
-                new THREE.Vector3(-50, 10, 100),
-                new THREE.Vector3(-20, -10, 150),
-                new THREE.Vector3(0, 0, 200)
-            ]);
-            
-            curve.tension = 0.1;
-            
-            for (let i = 0; i < 200; i++) {
-                const t = i / 199;
-                points.push(curve.getPointAt(t));
-            }
-            
-            return curve;
-        }
+// Create circular path for tunnel
+function createCircularPath() {
+    const points = [];
+    const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(20, 10, -50),
+        new THREE.Vector3(40, -10, -100),
+        new THREE.Vector3(60, 15, -150),
+        new THREE.Vector3(50, -5, -200),
+        new THREE.Vector3(0, 0, -250),
+        new THREE.Vector3(-100, 0, -200),
+        new THREE.Vector3(-150, 0, -100),
+        new THREE.Vector3(-100, 0, 0),
+        new THREE.Vector3(-50, 10, 100),
+        new THREE.Vector3(-20, -10, 150),
+        new THREE.Vector3(0, 0, 200)
+    ]);
+    
+    curve.tension = 0.1;
+    
+    for (let i = 0; i < 200; i++) {
+        const t = i / 199;
+        points.push(curve.getPointAt(t));
+    }
+    
+    return curve;
+}
+
+	    
     </script>
 </body>
 </html>
